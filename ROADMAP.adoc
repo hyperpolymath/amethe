@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: MIT OR AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2024-2025 hyperpolymath
+
+= Amethe Roadmap
+:toc:
+:toclevels: 2
+:icons: font
+
+== Current Status
+
+[IMPORTANT]
+====
+*Project specification pending upload.*
+
+This roadmap will be populated once the project requirements and design are finalized.
+====
+
+== Infrastructure (Complete)
+
+The following RSR infrastructure is in place:
+
+[cols="2,3,1"]
+|===
+|Component |Description |Status
+
+|Repository Structure
+|RSR-compliant layout with standard files
+|Done
+
+|CI/CD Workflows
+|CodeQL, Scorecard, quality gates, security scanning
+|Done
+
+|Justfile
+|50+ recipe template for build automation
+|Template
+
+|Documentation Framework
+|README, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT
+|Template
+
+|License
+|MIT OR AGPL-3.0-or-later dual license
+|Done
+|===
+
+== Planned Phases
+
+=== Phase 1: Specification
+
+* [ ] Upload project specification
+* [ ] Define scope and objectives
+* [ ] Identify core components
+* [ ] Select implementation languages (per Hyperpolymath Language Policy)
+
+=== Phase 2: Foundation
+
+* [ ] Core architecture design
+* [ ] Initial implementation
+* [ ] Test framework setup
+* [ ] Documentation
+
+=== Phase 3: Development
+
+_To be defined after specification upload._
+
+=== Phase 4: Release
+
+_To be defined after specification upload._
+
+== References
+
+* link:README.adoc[README]
+* link:CONTRIBUTING.md[Contributing Guidelines]
+* link:docs/ROADMAP.adoc[RSR Template Roadmap] (infrastructure reference)

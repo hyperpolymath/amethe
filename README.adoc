@@ -1,1 +1,34 @@
+// SPDX-License-Identifier: MIT OR AGPL-3.0-or-later
+// SPDX-FileCopyrightText: 2024-2025 hyperpolymath
 
+= Amethe
+:toc: preamble
+:toclevels: 2
+:icons: font
+
+== Status
+
+[NOTE]
+====
+*Repository project specification - will be uploaded shortly.*
+
+This repository has been initialized with RSR (Rhodium Standard Repository) infrastructure but does not yet contain project-specific code or documentation.
+====
+
+== About
+
+_Project description pending._
+
+== Quick Start
+
+_Setup instructions will be added once the project specification is uploaded._
+
+== License
+
+Dual-licensed under link:LICENSE.txt[MIT OR AGPL-3.0-or-later].
+
+== See Also
+
+* link:docs/ROADMAP.adoc[Roadmap]
+* link:CONTRIBUTING.md[Contributing]
+* link:SECURITY.md[Security Policy]

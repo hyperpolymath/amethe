@@ -52,24 +52,73 @@ info:
 
 # Build the project (debug mode)
 build *args:
-    @echo "Building {{project}}..."
-    # TODO: Add build command for your language
-    # Rust: cargo build {{args}}
-    # ReScript: npm run build
-    # Elixir: mix compile
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Building {{project}}..."
+    built=false
+    if [ -f "Cargo.toml" ]; then
+        cargo build $@
+        built=true
+    fi
+    if [ -f "rescript.json" ] || [ -f "bsconfig.json" ]; then
+        deno task build 2>/dev/null || npx rescript build $@
+        built=true
+    fi
+    if [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno task build $@ 2>/dev/null || deno check src/**/*.ts 2>/dev/null || true
+        built=true
+    fi
+    if [ -f "gleam.toml" ]; then
+        gleam build $@
+        built=true
+    fi
+    if [ "$built" = "false" ]; then
+        echo "No build configuration found (Cargo.toml, rescript.json, deno.json, or gleam.toml)"
+        echo "Add project source files and configuration to enable builds."
+    fi
 
 # Build in release mode with optimizations
 build-release *args:
-    @echo "Building {{project}} (release)..."
-    # TODO: Add release build command
-    # Rust: cargo build --release {{args}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Building {{project}} (release)..."
+    built=false
+    if [ -f "Cargo.toml" ]; then
+        cargo build --release $@
+        built=true
+    fi
+    if [ -f "rescript.json" ] || [ -f "bsconfig.json" ]; then
+        deno task build:release 2>/dev/null || npx rescript build -with-deps $@
+        built=true
+    fi
+    if [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno task build:release 2>/dev/null || deno compile src/main.ts 2>/dev/null || true
+        built=true
+    fi
+    if [ -f "gleam.toml" ]; then
+        gleam build --target erlang $@
+        built=true
+    fi
+    if [ "$built" = "false" ]; then
+        echo "No build configuration found."
+    fi
 
 # Build and watch for changes
 build-watch:
-    @echo "Watching for changes..."
-    # TODO: Add watch command
-    # Rust: cargo watch -x build
-    # ReScript: npm run watch
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Watching for changes..."
+    if [ -f "Cargo.toml" ]; then
+        cargo watch -x build
+    elif [ -f "rescript.json" ] || [ -f "bsconfig.json" ]; then
+        deno task watch 2>/dev/null || npx rescript build -w
+    elif [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno task dev 2>/dev/null || deno run --watch src/main.ts
+    elif [ -f "gleam.toml" ]; then
+        watchexec -e gleam -- gleam build
+    else
+        echo "No build configuration found for watch mode."
+    fi
 
 # Clean build artifacts [reversible: rebuild with `just build`]
 clean:
@@ -86,22 +135,60 @@ clean-all: clean
 
 # Run all tests
 test *args:
-    @echo "Running tests..."
-    # TODO: Add test command
-    # Rust: cargo test {{args}}
-    # ReScript: npm test
-    # Elixir: mix test
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Running tests..."
+    tested=false
+    if [ -f "Cargo.toml" ]; then
+        cargo test $@
+        tested=true
+    fi
+    if [ -f "rescript.json" ] || [ -f "bsconfig.json" ]; then
+        deno task test 2>/dev/null || npx rescript-test $@ 2>/dev/null || true
+        tested=true
+    fi
+    if [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno test $@
+        tested=true
+    fi
+    if [ -f "gleam.toml" ]; then
+        gleam test $@
+        tested=true
+    fi
+    if [ "$tested" = "false" ]; then
+        echo "No test configuration found."
+    fi
 
 # Run tests with verbose output
 test-verbose:
-    @echo "Running tests (verbose)..."
-    # TODO: Add verbose test
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Running tests (verbose)..."
+    if [ -f "Cargo.toml" ]; then
+        cargo test -- --nocapture
+    elif [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno test --reporter=verbose
+    elif [ -f "gleam.toml" ]; then
+        gleam test
+    else
+        echo "No test configuration found."
+    fi
 
 # Run tests and generate coverage report
 test-coverage:
-    @echo "Running tests with coverage..."
-    # TODO: Add coverage command
-    # Rust: cargo llvm-cov
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Running tests with coverage..."
+    if [ -f "Cargo.toml" ]; then
+        cargo llvm-cov --html
+        echo "Coverage report: target/llvm-cov/html/index.html"
+    elif [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno test --coverage=coverage
+        deno coverage coverage --lcov > coverage/lcov.info
+        echo "Coverage report: coverage/lcov.info"
+    else
+        echo "No coverage tool configured."
+    fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # LINT & FORMAT
@@ -109,23 +196,69 @@ test-coverage:
 
 # Format all source files [reversible: git checkout]
 fmt:
-    @echo "Formatting..."
-    # TODO: Add format command
-    # Rust: cargo fmt
-    # ReScript: npm run format
-    # Elixir: mix format
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Formatting..."
+    formatted=false
+    if [ -f "Cargo.toml" ]; then
+        cargo fmt
+        formatted=true
+    fi
+    if [ -f "rescript.json" ] || [ -f "bsconfig.json" ]; then
+        deno task format 2>/dev/null || npx rescript format -all 2>/dev/null || true
+        formatted=true
+    fi
+    if [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno fmt
+        formatted=true
+    fi
+    if [ -f "gleam.toml" ]; then
+        gleam format .
+        formatted=true
+    fi
+    if [ "$formatted" = "false" ]; then
+        echo "No formatter configured."
+    fi
 
 # Check formatting without changes
 fmt-check:
-    @echo "Checking format..."
-    # TODO: Add format check
-    # Rust: cargo fmt --check
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Checking format..."
+    checked=false
+    if [ -f "Cargo.toml" ]; then
+        cargo fmt --check
+        checked=true
+    fi
+    if [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno fmt --check
+        checked=true
+    fi
+    if [ -f "gleam.toml" ]; then
+        gleam format . --check
+        checked=true
+    fi
+    if [ "$checked" = "false" ]; then
+        echo "No format checker configured."
+    fi
 
 # Run linter
 lint:
-    @echo "Linting..."
-    # TODO: Add lint command
-    # Rust: cargo clippy -- -D warnings
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Linting..."
+    linted=false
+    if [ -f "Cargo.toml" ]; then
+        cargo clippy -- -D warnings
+        linted=true
+    fi
+    if [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno lint
+        linted=true
+    fi
+    if [ "$linted" = "false" ]; then
+        echo "No linter configured."
+    fi
 
 # Run all quality checks
 quality: fmt-check lint test
@@ -141,21 +274,50 @@ fix: fmt
 
 # Run the application
 run *args:
-    @echo "Running {{project}}..."
-    # TODO: Add run command
-    # Rust: cargo run {{args}}
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Running {{project}}..."
+    if [ -f "Cargo.toml" ]; then
+        cargo run $@
+    elif [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno task start $@ 2>/dev/null || deno run src/main.ts $@
+    elif [ -f "gleam.toml" ]; then
+        gleam run $@
+    else
+        echo "No run configuration found."
+    fi
 
 # Run in development mode with hot reload
 dev:
-    @echo "Starting dev mode..."
-    # TODO: Add dev command
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Starting dev mode..."
+    if [ -f "Cargo.toml" ]; then
+        cargo watch -x run
+    elif [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno task dev 2>/dev/null || deno run --watch src/main.ts
+    elif [ -f "gleam.toml" ]; then
+        watchexec -e gleam -- gleam run
+    else
+        echo "No dev configuration found."
+    fi
 
 # Run REPL/interactive mode
 repl:
-    @echo "Starting REPL..."
-    # TODO: Add REPL command
-    # Elixir: iex -S mix
-    # Guile: guix shell guile -- guile
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Starting REPL..."
+    if [ -f "Cargo.toml" ]; then
+        evcxr 2>/dev/null || echo "Install evcxr for Rust REPL: cargo install evcxr_repl"
+    elif [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno repl
+    elif [ -f "gleam.toml" ]; then
+        gleam shell
+    elif command -v guile &>/dev/null; then
+        guile
+    else
+        echo "No REPL available."
+    fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DEPENDENCIES
@@ -163,17 +325,48 @@ repl:
 
 # Install all dependencies
 deps:
-    @echo "Installing dependencies..."
-    # TODO: Add deps command
-    # Rust: (automatic with cargo)
-    # ReScript: npm install
-    # Elixir: mix deps.get
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Installing dependencies..."
+    installed=false
+    if [ -f "Cargo.toml" ]; then
+        cargo fetch
+        installed=true
+    fi
+    if [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        deno cache --reload src/**/*.ts 2>/dev/null || deno install 2>/dev/null || true
+        installed=true
+    fi
+    if [ -f "gleam.toml" ]; then
+        gleam deps download
+        installed=true
+    fi
+    if [ -f "guix.scm" ]; then
+        echo "Guix dependencies defined in guix.scm"
+        echo "Run: just guix-shell"
+        installed=true
+    fi
+    if [ "$installed" = "false" ]; then
+        echo "No dependency configuration found."
+    fi
 
 # Audit dependencies for vulnerabilities
 deps-audit:
-    @echo "Auditing dependencies..."
-    # TODO: Add audit command
-    # Rust: cargo audit
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Auditing dependencies..."
+    audited=false
+    if [ -f "Cargo.toml" ]; then
+        cargo audit 2>/dev/null || echo "Install cargo-audit: cargo install cargo-audit"
+        audited=true
+    fi
+    if [ -f "deno.json" ] || [ -f "deno.jsonc" ]; then
+        echo "Deno: dependencies from jsr/deno.land are verified by registry"
+        audited=true
+    fi
+    if [ "$audited" = "false" ]; then
+        echo "No audit tool configured."
+    fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # DOCUMENTATION

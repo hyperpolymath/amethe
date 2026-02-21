@@ -37,3 +37,8 @@ Dual-licensed under link:LICENSE.txt[PMPL-1.0 OR PMPL-1.0-or-later].
 * link:docs/ROADMAP.adoc[Roadmap]
 * link:CONTRIBUTING.md[Contributing]
 * link:SECURITY.md[Security Policy]
+
+
+== Architecture
+
+See link:TOPOLOGY.md[TOPOLOGY.md] for a visual architecture map and completion dashboard.

@@ -13,7 +13,7 @@ set dotenv-load := true
 set positional-arguments := true
 
 # Project metadata - CUSTOMIZE THESE
-project := "RSR-template-repo"
+project := "amethe"
 version := "0.1.0"
 tier := "infrastructure"  # 1 | 2 | infrastructure
 
@@ -56,6 +56,10 @@ build *args:
     set -euo pipefail
     echo "Building {{project}}..."
     built=false
+    if [ -f "ffi/zig/build.zig" ]; then
+        (cd ffi/zig && zig build $@)
+        built=true
+    fi
     if [ -f "Cargo.toml" ]; then
         cargo build $@
         built=true
@@ -137,9 +141,14 @@ clean-all: clean
 test *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "Running tests..."
+    echo "Testing {{project}}..."
     tested=false
+    if [ -f "ffi/zig/build.zig" ]; then
+        (cd ffi/zig && zig build test $@)
+        tested=true
+    fi
     if [ -f "Cargo.toml" ]; then
+
         cargo test $@
         tested=true
     fi
@@ -200,6 +209,10 @@ fmt:
     set -euo pipefail
     echo "Formatting..."
     formatted=false
+    if [ -f "ffi/zig/build.zig" ]; then
+        (cd ffi/zig && zig fmt .)
+        formatted=true
+    fi
     if [ -f "Cargo.toml" ]; then
         cargo fmt
         formatted=true
